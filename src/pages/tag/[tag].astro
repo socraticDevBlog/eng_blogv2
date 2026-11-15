@@ -1,11 +1,15 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import PostCard from '../../components/PostCard.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import PageLinks from '../../components/PageLinks.astro';
 import { queryPosts } from '../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../lib/head';
 
-// Like the old site's /tag/<slug> pages (gatsby-node.js): one page per tag,
-// created from the same GraphQL data.
+// Like the old site's /tag/<slug> pages (gatsby-node.js): one listing per tag,
+// newest first, now in a 3-per-row grid of 30 posts per page. Pages 2..N are
+// created in src/pages/tag/[tag]/page/[page].astro.
+const PER_PAGE = 30;
+
 export async function getStaticPaths() {
   const result = await queryPosts(`
     {
@@ -23,11 +27,15 @@ export async function getStaticPaths() {
 }
 
 const { tagName } = Astro.props;
+const tagSlug = Astro.params.tag;
 
-// Filtered by tag, newest first — same sort as everywhere else.
+// Page 1 of the tag listing: first 30 posts, newest first.
 const result = await queryPosts(`
   {
-    allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC) {
+    all: allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC) {
+      slug
+    }
+    page: allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC, limit: ${PER_PAGE}, offset: 0) {
       slug
       excerpt
       frontmatter {
@@ -41,7 +49,9 @@ const result = await queryPosts(`
   }
 `);
 if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
-const posts = result.data!.allPosts;
+const total = result.data!.all.length;
+const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
+const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
 const title = `Tag: ${tagName}`;
@@ -57,5 +67,6 @@ const description = `Posts tagged “${tagName}”, newest first.`;
   }}
 >
   <p><a href="/tags/">← All tags</a></p>
-  {posts.map((post) => <PostCard post={post} />)}
+  <PostGrid posts={posts} />
+  <PageLinks currentPage={1} numberOfPages={pageCount} base={`/tag/${tagSlug}`} />
 </StarlightPage>

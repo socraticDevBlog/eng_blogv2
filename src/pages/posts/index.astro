@@ -1,22 +1,36 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import PageLinks from '../../components/PageLinks.astro';
 import { queryPosts } from '../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../lib/head';
 
+// All posts, newest first — 3-per-row grid, 30 per page. Pages 2..N are
+// created in src/pages/posts/page/[page].astro.
+const PER_PAGE = 30;
+
 const result = await queryPosts(`
   {
-    allPosts(filter: { is_archived: false }, sort: DESC) {
+    all: allPosts(filter: { is_archived: false }, sort: DESC) {
       slug
+    }
+    page: allPosts(filter: { is_archived: false }, sort: DESC, limit: ${PER_PAGE}, offset: 0) {
+      slug
+      excerpt
       frontmatter {
         title
         date
+        author
+        image
         tags
       }
     }
   }
 `);
 if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
-const posts = result.data?.allPosts ?? [];
+const total = result.data!.all.length;
+const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
+const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
 const title = 'Posts';
@@ -31,13 +45,6 @@ const description = 'All posts, newest first.';
     head: socialImageHead({ image: defaultOgImage(site), title, description }),
   }}
 >
-  <ul>
-    {
-      posts.map((post) => (
-        <li>
-          <a href={`/posts/${post.slug}/`}>{post.frontmatter.title}</a> — {post.frontmatter.date}
-        </li>
-      ))
-    }
-  </ul>
+  <PostGrid posts={posts} />
+  <PageLinks currentPage={1} numberOfPages={pageCount} base="/posts" />
 </StarlightPage>

@@ -1,12 +1,14 @@
 ---
 import { slugify } from '../lib/slugify';
 
-const { post } = Astro.props;
+// `compact` = grid variant used on the listing pages (/page/N, /tag/…, /posts/…).
+// The home page keeps the full-size, single-column cards.
+const { post, compact = false } = Astro.props;
 const fm = post.frontmatter;
 const href = `/posts/${post.slug}/`;
 ---
 
-<article class="post-card">
+<article class:list={['post-card', { compact }]}>
   {
     fm.image && (
       <a href={href} class="post-card-image">
@@ -108,5 +110,51 @@ const href = `/posts/${post.slug}/`;
   .post-card-more:hover {
     background: var(--sl-color-accent);
     color: #fff;
+  }
+
+  /* ---- compact (grid) variant ---- */
+  .post-card.compact .post-card-image img {
+    height: 10rem;
+  }
+  .post-card.compact .post-card-body {
+    padding: 0.75rem 0.9rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .post-card.compact .post-card-title {
+    font-size: 1.05rem;
+  }
+  .post-card.compact .post-card-meta {
+    font-size: 0.78rem;
+    margin-bottom: 0.5rem;
+  }
+  .post-card.compact .post-card-excerpt {
+    font-size: 0.88rem;
+    margin-bottom: 0.6rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .post-card.compact .post-card-tags {
+    margin-bottom: 0.6rem;
+  }
+  .post-card.compact .post-card-tags li {
+    font-size: 0.7rem;
+  }
+  .post-card.compact .post-card-more {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  /* cards inside a grid stretch to equal height per row */
+  :global(.post-grid) .post-card {
+    margin-bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 </style>

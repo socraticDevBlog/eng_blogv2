@@ -1,0 +1,92 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostGrid from '../../../../components/PostGrid.astro';
+import PageLinks from '../../../../components/PageLinks.astro';
+import { queryPosts } from '../../../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../../../lib/head';
+
+// Pages 2..N of a tag listing (/tag/<slug>/page/N), 30 posts per page.
+const PER_PAGE = 30;
+
+export async function getStaticPaths() {
+  const tagsResult = await queryPosts(`
+    {
+      allTags(filter: { is_archived: false }) {
+        name
+        slug
+      }
+    }
+  `);
+  if (tagsResult.errors) throw new Error(JSON.stringify(tagsResult.errors, null, 2));
+  const postsResult = await queryPosts(`
+    {
+      allPosts(filter: { is_archived: false }, sort: DESC) {
+        frontmatter {
+          tags
+        }
+      }
+    }
+  `);
+  if (postsResult.errors) throw new Error(JSON.stringify(postsResult.errors, null, 2));
+
+  const counts = new Map<string, number>();
+  for (const post of postsResult.data!.allPosts) {
+    for (const tag of post.frontmatter.tags ?? []) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return tagsResult.data!.allTags.flatMap((tag) => {
+    const pageCount = Math.max(1, Math.ceil((counts.get(tag.name) ?? 0) / 30));
+    return Array.from({ length: pageCount - 1 }, (_, i) => ({
+      params: { tag: tag.slug, page: String(i + 2) },
+      props: { tagName: tag.name },
+    }));
+  });
+}
+
+const { tagName } = Astro.props;
+const tagSlug = Astro.params.tag;
+const currentPage = Number(Astro.params.page);
+const offset = (currentPage - 1) * PER_PAGE;
+
+const result = await queryPosts(`
+  {
+    all: allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC) {
+      slug
+    }
+    page: allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC, limit: ${PER_PAGE}, offset: ${offset}) {
+      slug
+      excerpt
+      frontmatter {
+        title
+        date
+        author
+        image
+        tags
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const total = result.data!.all.length;
+const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
+const posts = result.data!.page;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = `Tag: ${tagName} — page ${currentPage} of ${pageCount}`;
+const description = `Posts tagged “${tagName}”, newest first.`;
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <p><a href="/tags/">← All tags</a></p>
+  <PostGrid posts={posts} />
+  <PageLinks currentPage={currentPage} numberOfPages={pageCount} base={`/tag/${tagSlug}`} />
+</StarlightPage>

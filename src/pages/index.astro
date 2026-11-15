@@ -30,6 +30,9 @@ const result = await queryPosts(`
 `);
 if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
 const page = result.data!.postsPage;
+// The home page keeps its own 10-card layout; the /page/N pages that follow
+// list 30 posts each (see src/pages/page/[page].astro).
+const pageCount = page.total <= 10 ? 1 : 1 + Math.ceil((page.total - 10) / 30);
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
 const title = "socraticDev's blog";
@@ -56,7 +59,7 @@ const description = 'Talking about Technology, Philosophy and everything interes
   }}
 >
   {page.posts.map((post) => <PostCard post={post} />)}
-  <PageLinks currentPage={page.page} numberOfPages={page.pageCount} />
+  <PageLinks currentPage={page.page} numberOfPages={pageCount} />
 </StarlightPage>
 
 <style is:global>

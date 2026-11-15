@@ -1,0 +1,66 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostGrid from '../../../components/PostGrid.astro';
+import PageLinks from '../../../components/PageLinks.astro';
+import { queryPosts } from '../../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../../lib/head';
+
+// Pages 2..N of the all-posts listing (/posts/page/N), 30 per page.
+const PER_PAGE = 30;
+
+export async function getStaticPaths() {
+  const result = await queryPosts(`
+    {
+      allPosts(filter: { is_archived: false }, sort: DESC) {
+        slug
+      }
+    }
+  `);
+  if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+  const pageCount = Math.max(1, Math.ceil(result.data!.allPosts.length / 30));
+  return Array.from({ length: pageCount - 1 }, (_, i) => ({
+    params: { page: String(i + 2) },
+  }));
+}
+
+const currentPage = Number(Astro.params.page);
+const offset = (currentPage - 1) * PER_PAGE;
+const result = await queryPosts(`
+  {
+    all: allPosts(filter: { is_archived: false }, sort: DESC) {
+      slug
+    }
+    page: allPosts(filter: { is_archived: false }, sort: DESC, limit: ${PER_PAGE}, offset: ${offset}) {
+      slug
+      excerpt
+      frontmatter {
+        title
+        date
+        author
+        image
+        tags
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const total = result.data!.all.length;
+const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
+const posts = result.data!.page;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = `Posts — page ${currentPage} of ${pageCount}`;
+const description = 'All posts, newest first.';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <PostGrid posts={posts} />
+  <PageLinks currentPage={currentPage} numberOfPages={pageCount} base="/posts" />
+</StarlightPage>
