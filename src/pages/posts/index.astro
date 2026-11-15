@@ -4,6 +4,7 @@ import PostGrid from '../../components/PostGrid.astro';
 import PageLinks from '../../components/PageLinks.astro';
 import { queryPosts } from '../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../lib/head';
+import { dateRangeTitle } from '../../lib/dates';
 
 // All posts, newest first — 3-per-row grid, 30 per page. Pages 2..N are
 // created in src/pages/posts/page/[page].astro.
@@ -33,7 +34,7 @@ const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
 const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
-const title = 'Posts';
+const title = dateRangeTitle(posts) || 'Posts';
 const description = 'All posts, newest first.';
 ---
 

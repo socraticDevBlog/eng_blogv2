@@ -4,6 +4,7 @@ import PostGrid from '../../../../components/PostGrid.astro';
 import PageLinks from '../../../../components/PageLinks.astro';
 import { queryPosts } from '../../../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../../../lib/head';
+import { dateRangeTitle } from '../../../../lib/dates';
 
 // Pages 2..N of a tag listing (/tag/<slug>/page/N), 30 posts per page.
 const PER_PAGE = 30;
@@ -74,7 +75,8 @@ const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
 const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
-const title = `Tag: ${tagName} — page ${currentPage} of ${pageCount}`;
+const title =
+  dateRangeTitle(posts) || `Tag: ${tagName} — page ${currentPage} of ${pageCount}`;
 const description = `Posts tagged “${tagName}”, newest first.`;
 ---
 

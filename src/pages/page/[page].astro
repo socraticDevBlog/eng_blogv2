@@ -4,6 +4,7 @@ import PostGrid from '../../components/PostGrid.astro';
 import PageLinks from '../../components/PageLinks.astro';
 import { queryPosts } from '../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../lib/head';
+import { dateRangeTitle } from '../../lib/dates';
 
 // Mirrors gatsby-node.js: page 1 is the root page (src/pages/index.astro,
 // which keeps its own 10-post layout), pages 2..N are created here at /page/N
@@ -56,7 +57,8 @@ const pageCount = pageCountOf(total);
 const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
-const title = `Posts — page ${currentPage} of ${pageCount}`;
+// Title is the datetime range of the posts on this page (oldest → latest).
+const title = dateRangeTitle(posts) || `Posts — page ${currentPage} of ${pageCount}`;
 const description = 'A blog about technology and philosophy, newest posts first.';
 ---
 
