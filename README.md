@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/813f3370-0abd-47a6-b7f0-e3cb35b55e28/deploy-status)](https://app.netlify.com/projects/engblogv2/deploys)
+
 # socraticDev's blog — astro-blogv2
 
 A rebuild of the Gatsby blog (`eng_blog`) as a minimal, single-theme
