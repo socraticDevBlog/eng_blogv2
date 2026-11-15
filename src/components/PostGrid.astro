@@ -1,0 +1,30 @@
+---
+// 3-posts-per-row grid of compact post cards, used by every listing page
+// except the home page (/page/N, /tag/<slug>/…, /posts/…).
+import PostCard from './PostCard.astro';
+
+const { posts } = Astro.props;
+---
+
+<div class="post-grid">
+  {posts.map((post) => <PostCard post={post} compact />)}
+</div>
+
+<style>
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin: 0 0 1.5rem;
+  }
+  @media (max-width: 1024px) {
+    .post-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .post-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

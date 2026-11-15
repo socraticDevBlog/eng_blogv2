@@ -1,12 +1,13 @@
 ---
 // Same behaviour as the old site's src/components/page-links.js:
-// page 1 lives at "/", other pages at "/page/N", prev/next disabled at the ends.
-const { currentPage, numberOfPages } = Astro.props;
+// page 1 lives at the base path ("/" by default, or e.g. "/posts/" or
+// "/tag/<slug>/" via the `base` prop), other pages at "<base>/page/N".
+const { currentPage, numberOfPages, base = '' } = Astro.props;
 const isFirst = currentPage === 1;
 const isLast = currentPage === numberOfPages;
-const previousPage = currentPage - 1 === 1 ? '/' : `/page/${currentPage - 1}`;
-const nextPage = `/page/${currentPage + 1}`;
-const pageHref = (n: number) => (n === 1 ? '/' : `/page/${n}`);
+const pageHref = (n: number) => (n === 1 ? (base ? `${base}/` : '/') : `${base}/page/${n}`);
+const previousPage = pageHref(currentPage - 1);
+const nextPage = pageHref(currentPage + 1);
 const pages = Array.from({ length: numberOfPages }, (_, i) => i + 1);
 ---
 

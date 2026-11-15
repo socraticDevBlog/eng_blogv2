@@ -1,54 +1,62 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import PostCard from '../../components/PostCard.astro';
+import PostGrid from '../../components/PostGrid.astro';
 import PageLinks from '../../components/PageLinks.astro';
 import { queryPosts } from '../../lib/graphql';
 import { defaultOgImage, socialImageHead } from '../../lib/head';
 
-// Mirrors gatsby-node.js: page 1 is the root page (src/pages/index.astro),
-// pages 2..N are created here at /page/N.
+// Mirrors gatsby-node.js: page 1 is the root page (src/pages/index.astro,
+// which keeps its own 10-post layout), pages 2..N are created here at /page/N
+// and list 30 posts each in a 3-per-row grid.
+const HOME_COUNT = 10;
+const PER_PAGE = 30;
+const pageCountOf = (total: number) =>
+  total <= HOME_COUNT ? 1 : 1 + Math.ceil((total - HOME_COUNT) / PER_PAGE);
+
 export async function getStaticPaths() {
+  // NOTE: getStaticPaths is bundled separately — no module-level consts here.
   const result = await queryPosts(`
     {
-      postsPage(filter: { is_archived: false }, sort: DESC, page: 1, perPage: 10) {
-        pageCount
+      allPosts(filter: { is_archived: false }, sort: DESC) {
+        slug
       }
     }
   `);
   if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
-  const pageCount = result.data!.postsPage.pageCount;
+  const total = result.data!.allPosts.length;
+  const pageCount = total <= 10 ? 1 : 1 + Math.ceil((total - 10) / 30);
   return Array.from({ length: pageCount - 1 }, (_, i) => ({
     params: { page: String(i + 2) },
   }));
 }
 
 const currentPage = Number(Astro.params.page);
+const offset = HOME_COUNT + (currentPage - 2) * PER_PAGE;
 const result = await queryPosts(`
   {
-    postsPage(filter: { is_archived: false }, sort: DESC, page: ${currentPage}, perPage: 10) {
-      total
-      page
-      perPage
-      pageCount
-      posts {
-        slug
-        excerpt
-        frontmatter {
-          title
-          date
-          author
-          image
-          tags
-        }
+    all: allPosts(filter: { is_archived: false }, sort: DESC) {
+      slug
+    }
+    page: allPosts(filter: { is_archived: false }, sort: DESC, limit: ${PER_PAGE}, offset: ${offset}) {
+      slug
+      excerpt
+      frontmatter {
+        title
+        date
+        author
+        image
+        tags
       }
     }
   }
 `);
 if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
-const page = result.data!.postsPage;
+const total = result.data!.all.length;
+const pageCount = pageCountOf(total);
+const posts = result.data!.page;
 
 const site = Astro.site ?? new URL('https://en.socratic.dev');
-const title = `Posts — page ${page.page} of ${page.pageCount}`;
+const title = `Posts — page ${currentPage} of ${pageCount}`;
 const description = 'A blog about technology and philosophy, newest posts first.';
 ---
 
@@ -60,6 +68,6 @@ const description = 'A blog about technology and philosophy, newest posts first.
     head: socialImageHead({ image: defaultOgImage(site), title, description }),
   }}
 >
-  {page.posts.map((post) => <PostCard post={post} />)}
-  <PageLinks currentPage={page.page} numberOfPages={page.pageCount} />
+  <PostGrid posts={posts} />
+  <PageLinks currentPage={currentPage} numberOfPages={pageCount} />
 </StarlightPage>

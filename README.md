@@ -24,7 +24,7 @@ verification) is in **[PROMPT-BIBLE.md](./PROMPT-BIBLE.md)**.
 nvm use            # reads .nvmrc -> Node 26
 npm ci             # install from lockfile
 npm run dev        # dev server
-npm run build      # static build -> dist/ (120 pages)
+npm run build      # static build -> dist/ (118 pages)
 npm run preview    # serve dist/
 ```
 
@@ -34,8 +34,12 @@ npm run preview    # serve dist/
   served as pages via a **GraphQL layer** (`src/lib/graphql.ts`) that mirrors the
   old `gatsby-node.js` query: `allPosts(filter: { is_archived: false }, sort: DESC)`
   — 41 archived posts are excluded everywhere (listings, tag pages, single pages, RSS).
-- **Home page** = 10 latest posts as cards + pagination at `/page/2..9`
-  (same UX as the original Gatsby site).
+- **Home page** `/` = 10 latest posts as full-width cards (unchanged design) +
+  pagination at `/page/2..N`.
+- **All other listing pages** — `/page/N`, `/posts/` (+ `/posts/page/N`) and
+  `/tag/<slug>/` (+ `/tag/<slug>/page/N`) — show posts in a **3-per-row grid**
+  (2 columns ≤1024px, 1 column ≤640px) of compact cards, **30 posts per page**.
+  `/page/2` starts right after the home page's 10, so no post is duplicated.
 - **Post pages** `/posts/<slug>/` — image on top, full content width, before the title.
 - **Tags**: `/tags/` index + `/tag/<slug>/` filtered listings (clickable pills), date-DESC.
 - **RSS 2.0** at `/rss.xml` (`application/rss+xml` in dev/SSR), with autodiscovery link in `<head>`.
@@ -52,8 +56,8 @@ npm run preview    # serve dist/
 
 ## Routes
 
-`/` · `/page/2..9` · `/posts/` · `/posts/<slug>/` (81) · `/tags/` · `/tag/<slug>/` (27) ·
-`/404.html` · `/rss.xml` · `/images/*` · `/favicon.svg`
+`/` · `/page/2..4` · `/posts/` + `/posts/page/2..3` · `/posts/<slug>/` (81) · `/tags/` ·
+`/tag/<slug>/` (27, + `/tag/growth/page/2`) · `/404.html` · `/rss.xml` · `/images/*` · `/favicon.svg`
 
 ## Config highlights (`astro.config.mjs`)
 
