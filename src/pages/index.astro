@@ -1,0 +1,82 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostCard from '../components/PostCard.astro';
+import PageLinks from '../components/PageLinks.astro';
+import { queryPosts } from '../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../lib/head';
+
+// Same as the old site's src/pages/index.js: latest posts on the home page,
+// 10 per page, rest on /page/N (created in src/pages/page/[page].astro).
+const result = await queryPosts(`
+  {
+    postsPage(filter: { is_archived: false }, sort: DESC, page: 1, perPage: 10) {
+      total
+      page
+      perPage
+      pageCount
+      posts {
+        slug
+        excerpt
+        frontmatter {
+          title
+          date
+          author
+          image
+          tags
+        }
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const page = result.data!.postsPage;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = "socraticDev's blog";
+const description = 'Talking about Technology, Philosophy and everything interesting';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    // Render the cloud banner as the hero so it lands inside the same
+    // content-panel > sl-container as the (hidden) h1 title.
+    hero: {
+      image: {
+        html: '<img src="/images/banner.svg" alt="socratic.dev" style="display:block;margin:0 auto;padding-top:2em;width:min(30%,360px);height:auto" />',
+      },
+    },
+    head: [
+      // avoid "socraticDev's blog | socraticDev's blog" in <title>
+      { tag: 'title', content: title },
+      ...socialImageHead({ image: defaultOgImage(site), title, description }),
+    ],
+  }}
+>
+  {page.posts.map((post) => <PostCard post={post} />)}
+  <PageLinks currentPage={page.page} numberOfPages={page.pageCount} />
+</StarlightPage>
+
+<style is:global>
+  /* The cloud banner already carries the "socratic.dev" lettering,
+     so the h1 site title is redundant on the home page — hide it visually. */
+  main .content-panel h1#_top {
+    display: none;
+  }
+  /* Stack the hero so the cloud banner sits on top, full content width. */
+  main .hero {
+    display: grid !important;
+    grid-template-columns: 100% !important;
+    align-items: start !important;
+    gap: 1rem !important;
+    padding-block: 2em !important;
+  }
+  main .hero > .hero-html {
+    order: initial !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+</style>

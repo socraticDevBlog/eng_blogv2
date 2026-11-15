@@ -1,0 +1,129 @@
+---
+import { getCollection, render } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { queryPosts } from '../../lib/graphql';
+import { slugify } from '../../lib/slugify';
+import { socialImageHead } from '../../lib/head';
+
+export async function getStaticPaths() {
+  const result = await queryPosts(`
+    {
+      allPosts(filter: { is_archived: false }, sort: DESC) {
+        id
+        slug
+        excerpt
+        frontmatter {
+          title
+          date
+          author
+          image
+          tags
+        }
+      }
+    }
+  `);
+  if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+
+  const entries = await getCollection('posts');
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+
+  return (result.data?.allPosts ?? []).map((post) => ({
+    params: { slug: post.slug },
+    props: { post, entry: byId.get(post.id)! },
+  }));
+}
+
+const { post, entry } = Astro.props;
+const { Content } = await render(entry);
+const fm = post.frontmatter;
+
+// Like the old site's single-post template: the image sits on top of the
+// card, before the title. Starlight renders the hero image above the <h1>.
+const tagline = [fm.date, fm.author ? `by ${fm.author}` : '', fm.tags?.length ? fm.tags.join(', ') : '']
+  .filter(Boolean)
+  .join(' — ');
+const hero = {
+  ...(fm.image ? { image: { html: `<img src="${fm.image}" alt="${fm.title}" />` } } : {}),
+  tagline,
+};
+
+// OpenGraph / Twitter Card: the post's own image, its excerpt as description,
+// and the publish date. og:title/og:type/og:url come from title + route.
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const ogImage = fm.image ? new URL(fm.image, site).toString() : new URL('/images/devops-knows.png', site).toString();
+const head = socialImageHead({
+  image: ogImage,
+  title: fm.title,
+  description: post.excerpt,
+  publishedTime: fm.date,
+});
+---
+
+<StarlightPage hasSidebar={false} frontmatter={{ title: fm.title, description: post.excerpt, hero, head }}>
+  {
+    fm.tags?.length > 0 && (
+      <ul class="post-tags not-content">
+        {fm.tags.map((tag) => (
+          <li>
+            <a href={`/tag/${slugify(tag)}/`}>{tag}</a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  <Content />
+</StarlightPage>
+
+<style>
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+  }
+  .post-tags li {
+    margin: 0;
+    line-height: 1.4;
+  }
+  .post-tags a {
+    background: var(--sl-color-accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+  .post-tags a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<style is:global>
+  /* Stack the hero so the post image is always on top, above the title,
+     and spans the full content width like the body text. */
+  main .hero {
+    display: grid !important;
+    grid-template-columns: 100% !important;
+    align-items: start !important;
+    gap: 1rem !important;
+    padding-block: 1.5rem !important;
+  }
+  main .hero > .hero-html,
+  main .hero > img {
+    order: initial !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    object-fit: initial !important;
+    margin-inline: 0 !important;
+  }
+  main .hero > .hero-html img {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 0.5rem;
+  }
+</style>

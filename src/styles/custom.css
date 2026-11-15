@@ -1,0 +1,53 @@
+/* ---- Theme: turquoise accent taken from the cloud logo (banner.svg) ---- */
+/* Logo palette: #02a2c6 (main turquoise), #017793, #006885 (darker shades) */
+
+:root {
+  --sl-color-accent-low: #006885;
+  --sl-color-accent: #02a2c6;
+  --sl-color-accent-high: #4dd7ee;
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+  --sl-color-accent-low: #c9eef6;
+  --sl-color-accent: #017793;
+  --sl-color-accent-high: #006885;
+}
+
+/* ---- Small polish ---- */
+
+/* Keep the cloud banner logo compact in the header */
+.site-title img {
+  height: 2.25rem;
+  width: auto;
+}
+
+/* Teal text selection */
+::selection {
+  background: var(--sl-color-accent);
+  color: #fff;
+}
+
+/* Visible teal focus ring */
+:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+
+/* Smooth in-page anchor scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Post cards: subtle lift on hover */
+.post-card {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+.post-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--sl-color-accent);
+  box-shadow: var(--sl-shadow-md);
+}

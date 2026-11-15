@@ -1,0 +1,10 @@
+{/* Override of Starlight's ThemeProvider: dark is the default theme.
+   Only an explicitly stored 'light' preference overrides it; there is no
+   'auto'/system option anymore. Inlined to avoid FOUC. */}
+<script is:inline>
+  (() => {
+    const storedTheme =
+      typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+    document.documentElement.dataset.theme = storedTheme === 'light' ? 'light' : 'dark';
+  })();
+</script>

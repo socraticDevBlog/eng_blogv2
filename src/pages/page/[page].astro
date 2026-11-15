@@ -1,0 +1,65 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostCard from '../../components/PostCard.astro';
+import PageLinks from '../../components/PageLinks.astro';
+import { queryPosts } from '../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../lib/head';
+
+// Mirrors gatsby-node.js: page 1 is the root page (src/pages/index.astro),
+// pages 2..N are created here at /page/N.
+export async function getStaticPaths() {
+  const result = await queryPosts(`
+    {
+      postsPage(filter: { is_archived: false }, sort: DESC, page: 1, perPage: 10) {
+        pageCount
+      }
+    }
+  `);
+  if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+  const pageCount = result.data!.postsPage.pageCount;
+  return Array.from({ length: pageCount - 1 }, (_, i) => ({
+    params: { page: String(i + 2) },
+  }));
+}
+
+const currentPage = Number(Astro.params.page);
+const result = await queryPosts(`
+  {
+    postsPage(filter: { is_archived: false }, sort: DESC, page: ${currentPage}, perPage: 10) {
+      total
+      page
+      perPage
+      pageCount
+      posts {
+        slug
+        excerpt
+        frontmatter {
+          title
+          date
+          author
+          image
+          tags
+        }
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const page = result.data!.postsPage;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = `Posts — page ${page.page} of ${page.pageCount}`;
+const description = 'A blog about technology and philosophy, newest posts first.';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  {page.posts.map((post) => <PostCard post={post} />)}
+  <PageLinks currentPage={page.page} numberOfPages={page.pageCount} />
+</StarlightPage>

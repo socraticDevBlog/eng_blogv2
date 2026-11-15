@@ -1,0 +1,70 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { queryPosts } from '../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../lib/head';
+
+// Like the old site's /tags page (gatsby-node.js): every tag with its post
+// count, most used first, each linking to its filtered list at /tag/<slug>/.
+const result = await queryPosts(`
+  {
+    allTags(filter: { is_archived: false }) {
+      name
+      slug
+      count
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const tags = result.data!.allTags;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = 'Tags';
+const description = 'All tags, most used first.';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <ul class="tag-list not-content">
+    {
+      tags.map((tag) => (
+        <li>
+          <a href={`/tag/${tag.slug}/`}>{tag.name}</a> <span class="tag-count">({tag.count})</span>
+        </li>
+      ))
+    }
+  </ul>
+</StarlightPage>
+
+<style>
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    list-style: none;
+    padding: 0;
+  }
+  .tag-list li {
+    margin: 0;
+    line-height: 1.4;
+  }
+  .tag-list a {
+    background: var(--sl-color-accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.25rem 0.8rem;
+    text-decoration: none;
+  }
+  .tag-list a:hover {
+    text-decoration: underline;
+  }
+  .tag-count {
+    color: var(--sl-color-gray-3);
+  }
+</style>

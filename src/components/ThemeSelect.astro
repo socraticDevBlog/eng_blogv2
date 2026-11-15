@@ -1,0 +1,86 @@
+---
+// Override of Starlight's ThemeSelect: only dark (default) and light,
+// the "auto" option is removed.
+import Select from '@astrojs/starlight/components/Select.astro';
+---
+
+<starlight-theme-select>
+  <Select
+    label={Astro.locals.t('themeSelect.accessibleLabel')}
+    options={[
+      { label: Astro.locals.t('themeSelect.dark'), selected: true, value: 'dark' },
+      { label: Astro.locals.t('themeSelect.light'), selected: false, value: 'light' },
+    ]}
+    width="6.25em"
+  >
+    <Fragment slot="icon">
+      <svg class="sl-theme-icon-dark" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="--sl-icon-size: 1rem">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+      <svg class="sl-theme-icon-light" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="--sl-icon-size: 1rem">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+      </svg>
+    </Fragment>
+  </Select>
+</starlight-theme-select>
+
+{/* Inlined to avoid FOUC: restore the stored selection in the dropdown. */}
+<script
+  is:inline
+  set:html={`(() => {
+		const theme = (typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme'));
+		if (theme) document.querySelectorAll('starlight-theme-select select').forEach((s) => { s.value = theme; });
+	})();`}
+></script>
+
+<style>
+  @layer starlight.components {
+    starlight-theme-select:has([value='dark']:not(:checked)) :global(.sl-theme-icon-dark),
+    starlight-theme-select:has([value='light']:not(:checked)) :global(.sl-theme-icon-light) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  type Theme = 'dark' | 'light';
+
+  /** Key in `localStorage` to store color theme preference at. */
+  const storageKey = 'starlight-theme';
+
+  /** Coerce any stored value to a valid theme; dark is the default. */
+  const parseTheme = (theme: unknown): Theme => (theme === 'light' ? 'light' : 'dark');
+
+  const loadTheme = (): Theme =>
+    parseTheme(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey));
+
+  function storeTheme(theme: Theme): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(storageKey, theme);
+    }
+  }
+
+  /** Update select menu UI, document theme, and local storage state. */
+  function onThemeChange(theme: Theme): void {
+    document
+      .querySelectorAll<HTMLSelectElement>('starlight-theme-select select')
+      .forEach((select) => {
+        select.value = theme;
+      });
+    document.documentElement.dataset.theme = theme;
+    storeTheme(theme);
+  }
+
+  class StarlightThemeSelect extends HTMLElement {
+    constructor() {
+      super();
+      onThemeChange(loadTheme());
+      this.querySelector('select')?.addEventListener('change', (e) => {
+        if (e.currentTarget instanceof HTMLSelectElement) {
+          onThemeChange(parseTheme(e.currentTarget.value));
+        }
+      });
+    }
+  }
+  customElements.define('starlight-theme-select', StarlightThemeSelect);
+</script>

@@ -1,0 +1,43 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { queryPosts } from '../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../lib/head';
+
+const result = await queryPosts(`
+  {
+    allPosts(filter: { is_archived: false }, sort: DESC) {
+      slug
+      frontmatter {
+        title
+        date
+        tags
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const posts = result.data?.allPosts ?? [];
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = 'Posts';
+const description = 'All posts, newest first.';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <ul>
+    {
+      posts.map((post) => (
+        <li>
+          <a href={`/posts/${post.slug}/`}>{post.frontmatter.title}</a> — {post.frontmatter.date}
+        </li>
+      ))
+    }
+  </ul>
+</StarlightPage>

@@ -1,0 +1,61 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import PostCard from '../../components/PostCard.astro';
+import { queryPosts } from '../../lib/graphql';
+import { defaultOgImage, socialImageHead } from '../../lib/head';
+
+// Like the old site's /tag/<slug> pages (gatsby-node.js): one page per tag,
+// created from the same GraphQL data.
+export async function getStaticPaths() {
+  const result = await queryPosts(`
+    {
+      allTags(filter: { is_archived: false }) {
+        name
+        slug
+      }
+    }
+  `);
+  if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+  return result.data!.allTags.map((tag) => ({
+    params: { tag: tag.slug },
+    props: { tagName: tag.name },
+  }));
+}
+
+const { tagName } = Astro.props;
+
+// Filtered by tag, newest first — same sort as everywhere else.
+const result = await queryPosts(`
+  {
+    allPosts(filter: { is_archived: false, tag: ${JSON.stringify(tagName)} }, sort: DESC) {
+      slug
+      excerpt
+      frontmatter {
+        title
+        date
+        author
+        image
+        tags
+      }
+    }
+  }
+`);
+if (result.errors) throw new Error(JSON.stringify(result.errors, null, 2));
+const posts = result.data!.allPosts;
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = `Tag: ${tagName}`;
+const description = `Posts tagged “${tagName}”, newest first.`;
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <p><a href="/tags/">← All tags</a></p>
+  {posts.map((post) => <PostCard post={post} />)}
+</StarlightPage>
