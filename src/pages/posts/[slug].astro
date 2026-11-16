@@ -4,6 +4,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { queryPosts } from '../../lib/graphql';
 import { slugify } from '../../lib/slugify';
 import { socialImageHead } from '../../lib/head';
+import { formatDateEn } from '../../lib/dates';
 
 export async function getStaticPaths() {
   const result = await queryPosts(`
@@ -40,7 +41,10 @@ const fm = post.frontmatter;
 // Like the old site's single-post template: the image sits on top of the
 // card, before the title. Starlight renders the hero image above the <h1>.
 // Tags are omitted from the tagline: they already render as clickable pills below.
-const tagline = [fm.date, fm.author ? `by ${fm.author}` : ''].filter(Boolean).join(' — ');
+// Long date with weekday, e.g. "Saturday, February 28, 2026 — by SocraticDev".
+const tagline = [formatDateEn(fm.date, true), fm.author ? `by ${fm.author}` : '']
+  .filter(Boolean)
+  .join(' — ');
 const hero = {
   ...(fm.image ? { image: { html: `<img src="${fm.image}" alt="${fm.title}" />` } } : {}),
   tagline,

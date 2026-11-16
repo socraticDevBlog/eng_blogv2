@@ -1,12 +1,13 @@
 // English date helpers for listing-page titles.
 // Dates arrive as ISO strings ("2026-02-28") from the GraphQL layer.
 
-export function formatDateEn(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+export function formatDateEn(iso: string, withWeekday = false): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(
+    'en-US',
+    withWeekday
+      ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+      : { day: 'numeric', month: 'long', year: 'numeric' },
+  );
 }
 
 // Title with the datetime range of a page of posts (sorted DESC):
