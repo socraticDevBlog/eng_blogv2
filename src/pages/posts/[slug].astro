@@ -39,9 +39,8 @@ const fm = post.frontmatter;
 
 // Like the old site's single-post template: the image sits on top of the
 // card, before the title. Starlight renders the hero image above the <h1>.
-const tagline = [fm.date, fm.author ? `by ${fm.author}` : '', fm.tags?.length ? fm.tags.join(', ') : '']
-  .filter(Boolean)
-  .join(' — ');
+// Tags are omitted from the tagline: they already render as clickable pills below.
+const tagline = [fm.date, fm.author ? `by ${fm.author}` : ''].filter(Boolean).join(' — ');
 const hero = {
   ...(fm.image ? { image: { html: `<img src="${fm.image}" alt="${fm.title}" />` } } : {}),
   tagline,
