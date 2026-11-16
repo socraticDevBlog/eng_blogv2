@@ -6,9 +6,13 @@ import Default from '@astrojs/starlight/components/Footer.astro';
 
 <Default />
 <div class="footer-links">
-  <p>
-    <a href="https://en.socratic.dev/rss.xml">RSS feed</a>
-  </p>
+  <ul class="footer-nav">
+    <li><a href="/about/">about</a></li>
+    <li><a href="/tags/">topics</a></li>
+    <li><a href="/disclaimer/">disclaimer</a></li>
+    <li><a href="https://en.socratic.dev/rss.xml">rss</a></li>
+    <li><a href="https://socratic.dev">français</a></li>
+  </ul>
   <p class="footer-tagline">SocraticDev elsewhere on the web</p>
   <ul class="social-links">
     <li>
@@ -75,6 +79,14 @@ import Default from '@astrojs/starlight/components/Footer.astro';
   }
   .footer-links a:hover {
     text-decoration: underline;
+  }
+  .footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
   }
   .footer-tagline {
     color: var(--sl-color-gray-3);

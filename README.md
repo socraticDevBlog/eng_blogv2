@@ -24,7 +24,7 @@ verification) is in **[PROMPT-BIBLE.md](./PROMPT-BIBLE.md)**.
 nvm use            # reads .nvmrc -> Node 26
 npm ci             # install from lockfile
 npm run dev        # dev server
-npm run build      # static build -> dist/ (118 pages)
+npm run build      # static build -> dist/ (120 pages)
 npm run preview    # serve dist/
 ```
 
@@ -51,13 +51,15 @@ npm run preview    # serve dist/
 - **Teal theme** matching the cloud logo (`#02a2c6` accent), header = cloud banner logo
   (`replacesTitle`), favicon = turquoise head (`public/favicon.svg`).
 - **Custom 404** with a crying kitten and a "Back to safety" button.
-- Header links: RSS feed + French site (`https://socratic.dev`). Footer: RSS + GitHub /
-  Mastodon / X logos.
+- Header links: RSS feed + French site (`https://socratic.dev`). Footer: nav (about,
+  topics, disclaimer, rss, français) + GitHub / Mastodon / X logos.
+- Static pages `/about/` (with the PGP key) and `/disclaimer/`, ported from the old site.
 
 ## Routes
 
 `/` · `/page/2..4` · `/posts/` + `/posts/page/2..3` · `/posts/<slug>/` (81) · `/tags/` ·
-`/tag/<slug>/` (27, + `/tag/growth/page/2`) · `/404.html` · `/rss.xml` · `/images/*` · `/favicon.svg`
+`/tag/<slug>/` (27, + `/tag/growth/page/2`) · `/about/` · `/disclaimer/` · `/404.html` ·
+`/rss.xml` · `/images/*` · `/favicon.svg`
 
 ## Config highlights (`astro.config.mjs`)
 

@@ -1,0 +1,22 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { defaultOgImage, socialImageHead } from '../lib/head';
+
+const site = Astro.site ?? new URL('https://en.socratic.dev');
+const title = 'Disclaimer';
+const description = 'Ideas and opinions discussed on this blog are mine.';
+---
+
+<StarlightPage
+  hasSidebar={false}
+  frontmatter={{
+    title,
+    description,
+    head: socialImageHead({ image: defaultOgImage(site), title, description }),
+  }}
+>
+  <p>
+    Ideas and opinions discussed on this blog are mine. They do not necessarily
+    reflect those of my employers and clients.
+  </p>
+</StarlightPage>
