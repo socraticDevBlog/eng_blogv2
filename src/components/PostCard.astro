@@ -6,7 +6,7 @@ import { formatDateEn } from '../lib/dates';
 // The home page keeps the full-size, single-column cards.
 const { post, compact = false } = Astro.props;
 const fm = post.frontmatter;
-const href = `/posts/${post.slug}/`;
+const href = `/${post.slug}/`;
 // Long format with weekday, e.g. "Saturday, February 28, 2026" — no raw ISO dates.
 const dateEn = formatDateEn(fm.date, true);
 ---

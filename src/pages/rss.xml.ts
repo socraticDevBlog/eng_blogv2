@@ -53,7 +53,7 @@ export async function GET(context: APIContext) {
     items: posts.map((post) => ({
       title: post.frontmatter.title,
       description: post.excerpt,
-      link: `/posts/${post.slug}/`,
+      link: `/${post.slug}/`,
       pubDate: new Date(post.frontmatter.date),
       categories: post.frontmatter.tags ?? [],
       customData: post.frontmatter.author
